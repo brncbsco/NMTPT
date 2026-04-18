@@ -7,59 +7,196 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { background: #1a1a1a; color: #e0e0e0; font-family: 'Georgia', serif; }
-        .stat-card { background: #2a2a2a; border: 2px solid #444; border-radius: 10px; padding: 20px; text-align: center; }
-        .btn { padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-add { background: #27ae60; color: white; }
-        .btn-sub { background: #c0392b; color: white; }
-        .btn-play { background: #f39c12; color: #000; font-size: 1.5rem; }
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Georgia', serif;
+            background-color: #1a1a1a;
+        }
+
+        /* The container for all background elements */
+        #main-content {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        .bg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -10; /* Far back */
+        }
+
+        .bg-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Decorative images - lowered z-index so they don't block clicks */
+        .text img, .nmtimage img, .toptext img {
+            position: absolute;
+            z-index: -1; 
+            pointer-events: none; /* Allows clicks to pass through them if they overlap */
+        }
+
+        .text img {
+            top: -8vh;
+            left: 0vw;
+            filter: drop-shadow(5px 5px 2px rgba(0, 0, 0, 0.8));
+        }
+
+        .nmtimage img {
+            top: -9vh;
+            right: 0vw;
+            transform: scale(0.9);
+            filter: drop-shadow(5px 5px 2px rgba(0, 0, 0, 0.8));
+        }
+
+        .toptext img {
+            left: 2vw;
+            top: 2vh;
+        }
+
+        /* Gaussian Blur for the background content */
+        .content-blur {
+            filter: blur(10px);
+            pointer-events: none;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            color: white;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .close-x {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-x:hover { color: #ff4d4d; }
+
+        .btn-pill {
+            background-color: #fff9f2;
+            color: #5a0001;
+            padding: 12px 35px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 50; /* Ensure buttons are high enough to be clicked */
+        }
+
+        .btn-pill:hover {
+            background-color: #5c1818;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        #home-screen {
+            position: absolute;
+            top: 75vh;
+            left: 10vw;
+            z-index: 50;
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body>
 
-    <div id="home-screen" class="text-center">
-        <h1 class="text-5xl font-bold mb-4 text-red-700">Kanser ng Lipunan</h1>
-        <h2 class="text-2xl mb-8 italic text-gray-400">Ang Huling Kabanata</h2>
-        <div class="w-32 h-32 bg-gray-700 rounded-full mx-auto mb-8 flex items-center justify-center border-4 border-red-900">
-            <span class="text-sm">LOGO HERE</span>
+    <div id="main-content">
+        <div class="bg-container"><img src="background.png" alt="background"></div>
+        <div class="text"><img src="text.png"></div>
+        <div class="nmtimage"><img src="nmtimage.png"></div>
+        <div class="toptext"><img src="toptext.png"></div>
+        
+        <div id="home-screen" class="flex flex-row gap-6">
+            <button onclick="openModal('how-to-play-modal')" class="btn-pill italic">Paano maglaro?</button>
+            <button onclick="openModal('qr-modal')" class="btn-pill italic">Simulan</button>
         </div>
-        <button onclick="showQR()" class="btn btn-play">PLAY</button>
     </div>
 
-    <div id="qr-screen" class="hidden text-center">
-        <h2 class="text-3xl mb-8">Scan to Connect Controllers</h2>
-        <div class="flex flex-col md:flex-row gap-10">
-            <div>
-                <p class="mb-2">Kamalayan Controller</p>
-                <div id="qr-kamalayan" class="p-2 bg-white inline-block"></div>
+    <div id="how-to-play-modal" class="modal-overlay">
+        <div class="glass-panel">
+            <span class="close-x" onclick="closeModals()">&times;</span>
+            <h2 class="text-3xl font-bold mb-6 border-b border-white/20 pb-2">Paano Maglaro</h2>
+            <div class="text-left space-y-4 text-lg">
+                <p>1. <strong>Koneksyon:</strong> I-scan ang QR code gamit ang dalawang magkaibang phone.</p>
+                <p>2. <strong>Tungkulin:</strong> Isang phone para sa <em>Kamalayan</em> at isa para sa <em>Pang-aapi</em>.</p>
+                <p>3. <strong>Layunin:</strong> Pindutin ang DAGDAG o BAWASAN para baguhin ang stats.</p>
             </div>
-            <div>
-                <p class="mb-2">Pang-aapi Controller</p>
-                <div id="qr-pangaapi" class="p-2 bg-white inline-block"></div>
-            </div>
+            <button onclick="closeModals()" class="btn-pill mt-8">Naintindihan!</button>
         </div>
-        <button onclick="startGame()" class="btn btn-add mt-10">START NOW!</button>
     </div>
 
-    <div id="game-screen" class="hidden w-full max-w-4xl">
-        <div class="grid grid-cols-2 gap-8 mb-10">
-            <div class="stat-card">
-                <h3 class="text-xl text-blue-400">KAMALAYAN</h3>
-                <div id="val-kamalayan" class="text-7xl font-bold">0</div>
+    <div id="qr-modal" class="modal-overlay">
+        <div class="glass-panel">
+            <span class="close-x" onclick="closeModals()">&times;</span>
+            <h2 class="text-2xl font-bold mb-8">I-scan ang mga QR Code</h2>
+            <div class="flex flex-col md:flex-row gap-8 justify-center items-center">
+                <div class="bg-white p-3 rounded-lg"><div id="qr-kamalayan"></div><p class="text-black font-bold mt-2 text-sm uppercase">Kamalayan</p></div>
+                <div class="bg-white p-3 rounded-lg"><div id="qr-pangaapi"></div><p class="text-black font-bold mt-2 text-sm uppercase">Pang-aapi</p></div>
             </div>
-            <div class="stat-card">
-                <h3 class="text-xl text-red-400">PANG-AAPI</h3>
-                <div id="val-pangaapi" class="text-7xl font-bold">0</div>
-            </div>
+            <button onclick="startGame()" class="btn-pill mt-10" style="background-color: #27ae60; color: white;">START NOW!</button>
         </div>
-        <button onclick="endGame()" class="btn btn-sub w-full">END GAME!</button>
     </div>
 
-    <div id="controller-screen" class="hidden text-center w-full">
-        <h2 id="controller-title" class="text-3xl mb-10 font-bold uppercase"></h2>
-        <div class="flex flex-col gap-6">
-            <button onclick="updateStat(1)" class="btn btn-add text-3xl py-10">DAGDAG</button>
-            <button onclick="updateStat(-1)" class="btn btn-sub text-3xl py-10">BAWASAN</button>
+    <div id="game-screen" class="hidden fixed inset-0 flex flex-col items-center justify-center bg-[#0a0a0a] z-[150] p-4">
+        <div class="grid grid-cols-2 gap-12 w-full max-w-5xl">
+            <div class="p-10 border-2 border-blue-500/30 bg-blue-900/10 rounded-2xl text-center">
+                <h3 class="text-2xl text-blue-400 mb-4 tracking-widest uppercase">Kamalayan</h3>
+                <div id="val-kamalayan" class="text-9xl font-bold text-white">0</div>
+            </div>
+            <div class="p-10 border-2 border-red-500/30 bg-red-900/10 rounded-2xl text-center">
+                <h3 class="text-2xl text-red-400 mb-4 tracking-widest uppercase">Pang-aapi</h3>
+                <div id="val-pangaapi" class="text-9xl font-bold text-white">0</div>
+            </div>
+        </div>
+        <button onclick="endGame()" class="mt-20 btn-pill" style="background-color: #c0392b; color: white;">Tapos na!</button>
+    </div>
+
+    <div id="controller-screen" class="hidden fixed inset-0 bg-zinc-900 flex flex-col items-center justify-center p-6 z-[200]">
+        <h2 id="controller-title" class="text-3xl mb-12 font-bold uppercase text-white tracking-widest"></h2>
+        <div class="flex flex-col gap-8 w-full">
+            <button onclick="updateStat(1)" class="bg-emerald-600 text-white text-4xl py-14 rounded-3xl font-black shadow-2xl">DAGDAG</button>
+            <button onclick="updateStat(-1)" class="bg-rose-800 text-white text-4xl py-14 rounded-3xl font-black shadow-2xl">BAWASAN</button>
         </div>
     </div>
 
@@ -67,83 +204,71 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // TODO: REPLACE WITH YOUR FIREBASE CONFIG FROM STEP 1
-const firebaseConfig = {
-  apiKey: "AIzaSyBRGXZF8BqSj4BLLdLA4WYBcPOffybff5c",
-  authDomain: "nmtpt-2e3df.firebaseapp.com",
-  databaseURL: "https://nmtpt-2e3df-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nmtpt-2e3df",
-  storageBucket: "nmtpt-2e3df.firebasestorage.app",
-  messagingSenderId: "22735174041",
-  appId: "1:22735174041:web:88afb00c37370b137d3b08",
-  measurementId: "G-P5PF8R7960"
-};
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRGXZF8BqSj4BLLdLA4WYBcPOffybff5c",
+            authDomain: "nmtpt-2e3df.firebaseapp.com",
+            databaseURL: "https://nmtpt-2e3df-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "nmtpt-2e3df",
+            storageBucket: "nmtpt-2e3df.firebasestorage.app",
+            messagingSenderId: "22735174041",
+            appId: "1:22735174041:web:88afb00c37370b137d3b08"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
-        // Global state
         const urlParams = new URLSearchParams(window.location.search);
-        const role = urlParams.get('role'); // 'kamalayan' or 'pangaapi'
+        const role = urlParams.get('role');
 
-        // INITIALIZE IF ON PHONE
         if (role) {
-            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('main-content').style.display = 'none';
             document.getElementById('controller-screen').classList.remove('hidden');
             document.getElementById('controller-title').innerText = role.replace('-', ' ');
         }
 
-        // --- FUNCTIONS ---
-        window.showQR = function() {
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('qr-screen').classList.remove('hidden');
-            
+        window.openModal = function(id) {
+            document.getElementById(id).style.display = 'flex';
+            document.getElementById('main-content').classList.add('content-blur');
+            if (id === 'qr-modal') generateQRs();
+        }
+
+        window.closeModals = function() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+            document.getElementById('main-content').classList.remove('content-blur');
+        }
+
+        function generateQRs() {
             const currentUrl = window.location.href.split('?')[0];
-            new QRCode(document.getElementById("qr-kamalayan"), currentUrl + "?role=kamalayan");
-            new QRCode(document.getElementById("qr-pangaapi"), currentUrl + "?role=pangaapi");
+            document.getElementById("qr-kamalayan").innerHTML = "";
+            document.getElementById("qr-pangaapi").innerHTML = "";
+            new QRCode(document.getElementById("qr-kamalayan"), { text: currentUrl + "?role=kamalayan", width: 150, height: 150 });
+            new QRCode(document.getElementById("qr-pangaapi"), { text: currentUrl + "?role=pangaapi", width: 150, height: 150 });
         }
 
         window.startGame = function() {
-            // Reset stats in DB
             set(ref(db, 'stats'), { kamalayan: 0, pangaapi: 0 });
-            document.getElementById('qr-screen').classList.add('hidden');
+            closeModals();
+            document.getElementById('main-content').style.display = 'none';
             document.getElementById('game-screen').classList.remove('hidden');
         }
 
-        // Update function for phones
         window.updateStat = function(amt) {
             const statRef = ref(db, 'stats/' + role);
-            runTransaction(statRef, (currentValue) => {
-                return (currentValue || 0) + amt;
-            });
+            runTransaction(statRef, (val) => (val || 0) + amt);
         }
 
-        // Real-time listener for Laptop Dashboard
-        onValue(ref(db, 'stats'), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if(document.getElementById('val-kamalayan')) {
-                    document.getElementById('val-kamalayan').innerText = data.kamalayan;
-                    document.getElementById('val-pangaapi').innerText = data.pangaapi;
-                }
+        onValue(ref(db, 'stats'), (snap) => {
+            const data = snap.val();
+            if (data && document.getElementById('val-kamalayan')) {
+                document.getElementById('val-kamalayan').innerText = data.kamalayan;
+                document.getElementById('val-pangaapi').innerText = data.pangaapi;
             }
         });
 
         window.endGame = function() {
-            const kamVal = parseInt(document.getElementById('val-kamalayan').innerText);
-            const pangVal = parseInt(document.getElementById('val-pangaapi').innerText);
-            
-            let winner = "";
-            if (kamVal > pangVal) {
-                winner = "REPORMISTA WIN! (High Kamalayan)";
-            } else if (pangVal > kamVal) {
-                winner = "KOLONIYALISTA WIN! (High Pang-aapi)";
-            } else {
-                winner = "ITS A DRAW!";
-            }
-            alert("GAME OVER\n" + winner);
-            location.reload(); // Reset to home
+            const k = parseInt(document.getElementById('val-kamalayan').innerText);
+            const p = parseInt(document.getElementById('val-pangaapi').innerText);
+            alert(k > p ? "REPORMISTA WIN!" : p > k ? "KOLONIYALISTA WIN!" : "IT'S A DRAW!");
+            location.reload();
         }
     </script>
 </body>
