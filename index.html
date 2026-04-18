@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-  /* --- 1. CORE LAYOUT & SCROLLBAR --- */
+/* --- 1. CORE LAYOUT & SCROLLBAR --- */
 body, html {
     margin: 0;
     padding: 0;
@@ -53,24 +53,25 @@ body, html {
 }
 
 .text img {
-    top: 45%; 
-    left: 50%;
+    top: 51%; 
+    left: 45%;
     transform: translate(-50%, -50%); /* Keeps it perfectly centered */
     filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.9));
     max-width: 80vw;
+    
 }
 
 .nmtimage img {
     bottom: 0;
-    right: 0;
+    right: 5%;
     transform: scale(0.9) translate(5%, 5%); /* Slightly tucked into the corner */
     filter: drop-shadow(-10px -10px 20px rgba(0, 0, 0, 0.7));
 }
 
 .toptext img {
-    top: 5vh;
-    left: 5vw;
-    width: 300px;
+    position: absolute;
+    top: 1%;
+    left: 5%;
 }
 
 /* --- 4. MODALS & GLASSMORPHISM --- */
@@ -158,6 +159,7 @@ body, html {
     padding: 2.5rem;
     text-align: center;
 }
+</style>
 </head>
 <body>
 
