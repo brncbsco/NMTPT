@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanser ng Lipunan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { background: #1a1a1a; color: #e0e0e0; font-family: 'Georgia', serif; }
+        .stat-card { background: #2a2a2a; border: 2px solid #444; border-radius: 10px; padding: 20px; text-align: center; }
+        .btn { padding: 15px 30px; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-sub { background: #c0392b; color: white; }
+        .btn-play { background: #f39c12; color: #000; font-size: 1.5rem; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div id="home-screen" class="text-center">
+        <h1 class="text-5xl font-bold mb-4 text-red-700">Kanser ng Lipunan</h1>
+        <h2 class="text-2xl mb-8 italic text-gray-400">Ang Huling Kabanata</h2>
+        <div class="w-32 h-32 bg-gray-700 rounded-full mx-auto mb-8 flex items-center justify-center border-4 border-red-900">
+            <span class="text-sm">LOGO HERE</span>
+        </div>
+        <button onclick="showQR()" class="btn btn-play">PLAY</button>
+    </div>
+
+    <div id="qr-screen" class="hidden text-center">
+        <h2 class="text-3xl mb-8">Scan to Connect Controllers</h2>
+        <div class="flex flex-col md:flex-row gap-10">
+            <div>
+                <p class="mb-2">Kamalayan Controller</p>
+                <div id="qr-kamalayan" class="p-2 bg-white inline-block"></div>
+            </div>
+            <div>
+                <p class="mb-2">Pang-aapi Controller</p>
+                <div id="qr-pangaapi" class="p-2 bg-white inline-block"></div>
+            </div>
+        </div>
+        <button onclick="startGame()" class="btn btn-add mt-10">START NOW!</button>
+    </div>
+
+    <div id="game-screen" class="hidden w-full max-w-4xl">
+        <div class="grid grid-cols-2 gap-8 mb-10">
+            <div class="stat-card">
+                <h3 class="text-xl text-blue-400">KAMALAYAN</h3>
+                <div id="val-kamalayan" class="text-7xl font-bold">0</div>
+            </div>
+            <div class="stat-card">
+                <h3 class="text-xl text-red-400">PANG-AAPI</h3>
+                <div id="val-pangaapi" class="text-7xl font-bold">0</div>
+            </div>
+        </div>
+        <button onclick="endGame()" class="btn btn-sub w-full">END GAME!</button>
+    </div>
+
+    <div id="controller-screen" class="hidden text-center w-full">
+        <h2 id="controller-title" class="text-3xl mb-10 font-bold uppercase"></h2>
+        <div class="flex flex-col gap-6">
+            <button onclick="updateStat(1)" class="btn btn-add text-3xl py-10">DAGDAG</button>
+            <button onclick="updateStat(-1)" class="btn btn-sub text-3xl py-10">BAWASAN</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // TODO: REPLACE WITH YOUR FIREBASE CONFIG FROM STEP 1
+const firebaseConfig = {
+  apiKey: "AIzaSyBRGXZF8BqSj4BLLdLA4WYBcPOffybff5c",
+  authDomain: "nmtpt-2e3df.firebaseapp.com",
+  databaseURL: "https://nmtpt-2e3df-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nmtpt-2e3df",
+  storageBucket: "nmtpt-2e3df.firebasestorage.app",
+  messagingSenderId: "22735174041",
+  appId: "1:22735174041:web:88afb00c37370b137d3b08",
+  measurementId: "G-P5PF8R7960"
+};
+
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Global state
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role'); // 'kamalayan' or 'pangaapi'
+
+        // INITIALIZE IF ON PHONE
+        if (role) {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('controller-screen').classList.remove('hidden');
+            document.getElementById('controller-title').innerText = role.replace('-', ' ');
+        }
+
+        // --- FUNCTIONS ---
+        window.showQR = function() {
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('qr-screen').classList.remove('hidden');
+            
+            const currentUrl = window.location.href.split('?')[0];
+            new QRCode(document.getElementById("qr-kamalayan"), currentUrl + "?role=kamalayan");
+            new QRCode(document.getElementById("qr-pangaapi"), currentUrl + "?role=pangaapi");
+        }
+
+        window.startGame = function() {
+            // Reset stats in DB
+            set(ref(db, 'stats'), { kamalayan: 0, pangaapi: 0 });
+            document.getElementById('qr-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+        }
+
+        // Update function for phones
+        window.updateStat = function(amt) {
+            const statRef = ref(db, 'stats/' + role);
+            runTransaction(statRef, (currentValue) => {
+                return (currentValue || 0) + amt;
+            });
+        }
+
+        // Real-time listener for Laptop Dashboard
+        onValue(ref(db, 'stats'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                if(document.getElementById('val-kamalayan')) {
+                    document.getElementById('val-kamalayan').innerText = data.kamalayan;
+                    document.getElementById('val-pangaapi').innerText = data.pangaapi;
+                }
+            }
+        });
+
+        window.endGame = function() {
+            const kamVal = parseInt(document.getElementById('val-kamalayan').innerText);
+            const pangVal = parseInt(document.getElementById('val-pangaapi').innerText);
+            
+            let winner = "";
+            if (kamVal > pangVal) {
+                winner = "REPORMISTA WIN! (High Kamalayan)";
+            } else if (pangVal > kamVal) {
+                winner = "KOLONIYALISTA WIN! (High Pang-aapi)";
+            } else {
+                winner = "ITS A DRAW!";
+            }
+            alert("GAME OVER\n" + winner);
+            location.reload(); // Reset to home
+        }
+    </script>
+</body>
+</html>
