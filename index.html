@@ -7,137 +7,157 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: 'Georgia', serif;
-            background-color: #1a1a1a;
-        }
+  /* --- 1. CORE LAYOUT & SCROLLBAR --- */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Prevents shifting and "wobbling" on GitHub */
+    font-family: 'Georgia', serif;
+    background-color: #000;
+}
 
-        /* The container for all background elements */
-        #main-content {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-        }
+/* Custom Scrollbar for the panels (if text is long) */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+::-webkit-scrollbar-thumb { background: #a80113; border-radius: 10px; }
 
-        .bg-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -10; /* Far back */
-        }
+/* --- 2. BACKGROUND & LAYERING --- */
+#main-content {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    transition: filter 0.4s ease; /* Smooth blur transition */
+}
 
-        .bg-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+.bg-container {
+    position: absolute;
+    inset: 0; /* Shortcut for top/bottom/left/right: 0 */
+    z-index: -10;
+}
 
-        /* Decorative images - lowered z-index so they don't block clicks */
-        .text img, .nmtimage img, .toptext img {
-            position: absolute;
-            z-index: -1; 
-            pointer-events: none; /* Allows clicks to pass through them if they overlap */
-        }
+.bg-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Keeps art from stretching weirdly */
+}
 
-        .text img {
-            top: -8vh;
-            left: 0vw;
-            filter: drop-shadow(5px 5px 2px rgba(0, 0, 0, 0.8));
-        }
+/* --- 3. DECORATIVE IMAGES (The GitHub Fix) --- */
+/* We use pointer-events: none so these images don't block button clicks */
+.text img, .nmtimage img, .toptext img {
+    position: absolute;
+    pointer-events: none; 
+    z-index: 2;
+}
 
-        .nmtimage img {
-            top: -9vh;
-            right: 0vw;
-            transform: scale(0.9);
-            filter: drop-shadow(5px 5px 2px rgba(0, 0, 0, 0.8));
-        }
+.text img {
+    top: 45%; 
+    left: 50%;
+    transform: translate(-50%, -50%); /* Keeps it perfectly centered */
+    filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.9));
+    max-width: 80vw;
+}
 
-        .toptext img {
-            left: 2vw;
-            top: 2vh;
-        }
+.nmtimage img {
+    bottom: 0;
+    right: 0;
+    transform: scale(0.9) translate(5%, 5%); /* Slightly tucked into the corner */
+    filter: drop-shadow(-10px -10px 20px rgba(0, 0, 0, 0.7));
+}
 
-        /* Gaussian Blur for the background content */
-        .content-blur {
-            filter: blur(10px);
-            pointer-events: none;
-        }
+.toptext img {
+    top: 5vh;
+    left: 5vw;
+    width: 300px;
+}
 
-        /* Modal Overlay */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            display: none;
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
+/* --- 4. MODALS & GLASSMORPHISM --- */
+.content-blur {
+    filter: blur(12px) brightness(0.7); /* Dims and blurs bg when menu is open */
+}
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
-            color: white;
-            max-width: 600px;
-            width: 90%;
-        }
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+}
 
-        .close-x {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            font-size: 2.5rem;
-            color: white;
-            cursor: pointer;
-            line-height: 1;
-        }
+.glass-panel {
+    background: rgba(20, 20, 20, 0.4); /* Dark translucent base */
+    backdrop-filter: blur(20px); /* The Gaussian Blur */
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+    color: white;
+    width: 90%;
+    max-width: 650px;
+}
 
-        .close-x:hover { color: #ff4d4d; }
+.close-x {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    font-size: 2.5rem;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.3s;
+}
 
-        .btn-pill {
-            background-color: #fff9f2;
-            color: #5a0001;
-            padding: 12px 35px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            z-index: 50; /* Ensure buttons are high enough to be clicked */
-        }
+.close-x:hover { color: #ff4d4d; }
 
-        .btn-pill:hover {
-            background-color: #5c1818;
-            color: white;
-            transform: scale(1.1);
-        }
+/* --- 5. BUTTON STYLING --- */
+#home-screen {
+    position: absolute;
+    bottom: 15vh; /* Anchored to bottom left */
+    left: 10vw;
+    z-index: 50;
+}
 
-        #home-screen {
-            position: absolute;
-            top: 75vh;
-            left: 10vw;
-            z-index: 50;
-        }
-    </style>
+.btn-pill {
+    background-color: #fff9f2;
+    color: #5a0001;
+    padding: 0.8rem 2.5rem;
+    border-radius: 9999px;
+    font-weight: 800;
+    font-size: 1.25rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-block;
+}
+
+.btn-pill:hover {
+    background-color: #5a0001;
+    color: #fff9f2;
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.btn-pill:active {
+    transform: translateY(0) scale(1);
+}
+
+/* --- 6. GAME SCREEN UTILITIES --- */
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2.5rem;
+    text-align: center;
+}
 </head>
 <body>
 
