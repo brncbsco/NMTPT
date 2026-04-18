@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,207 +7,168 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-/* --- 1. CORE LAYOUT & SCROLLBAR --- */
-body, html {
-    margin: 0;
-    padding: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden; /* Prevents shifting and "wobbling" on GitHub */
-    font-family: 'Georgia', serif;
-    background-color: #000;
-}
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Georgia', serif;
+            background-color: #000;
+        }
 
-/* Custom Scrollbar for the panels (if text is long) */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-::-webkit-scrollbar-thumb { background: #a80113; border-radius: 10px; }
+        /* --- 2. BACKGROUND & LAYERING --- */
+        #main-content {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            transition: filter 0.4s ease;
+        }
 
-/* --- 2. BACKGROUND & LAYERING --- */
-#main-content {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1;
-    transition: filter 0.4s ease; /* Smooth blur transition */
-}
+        .bg-container {
+            position: absolute;
+            inset: 0; 
+            z-index: -10;
+        }
 
-.bg-container {
-    position: absolute;
-    inset: 0; /* Shortcut for top/bottom/left/right: 0 */
-    z-index: -10;
-}
+        .bg-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+        }
 
-.bg-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Keeps art from stretching weirdly */
-}
+        /* --- 3. DECORATIVE IMAGES (The GitHub Fix) --- */
+        .text img, .nmtimage img, .toptext img {
+            position: absolute;
+            pointer-events: none; 
+            z-index: 2;
+        }
 
-/* --- 3. DECORATIVE IMAGES (The GitHub Fix) --- */
-/* We use pointer-events: none so these images don't block button clicks */
-.text img, .nmtimage img, .toptext img {
-    position: absolute;
-    pointer-events: none; 
-    z-index: 2;
-}
+        .text img {
+            top: 51%; 
+            left: 45%;
+            transform: translate(-50%, -50%); 
+            filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.9));
+            max-width: 80vw;
+        }
 
-.text img {
-    top: 51%; 
-    left: 45%;
-    transform: translate(-50%, -50%); /* Keeps it perfectly centered */
-    filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.9));
-    max-width: 80vw;
-    
-}
+        .nmtimage img {
+            bottom:-3%;
+            right: 4%;
+            transform: scale(0.8) translate(5%, 5%); 
+            filter: drop-shadow(-10px -10px 20px rgba(0, 0, 0, 0.7));
+        }
 
-.nmtimage img {
-    bottom:-3%;
-    right: 4%;
-    transform: scale(0.8) translate(5%, 5%); /* Slightly tucked into the corner */
-    filter: drop-shadow(-10px -10px 20px rgba(0, 0, 0, 0.7));
-}
+        .toptext img {
+            position: absolute;
+            top: 1%;
+            left: 5%;
+        }
 
-.toptext img {
-    position: absolute;
-    top: 1%;
-    left: 5%;
-}
+        /* --- MODALS & BLUR --- */
+        .content-blur {
+            filter: blur(12px) brightness(0.7);
+        }
 
-/* --- 4. MODALS & GLASSMORPHISM --- */
-.content-blur {
-    filter: blur(12px) brightness(0.7); /* Dims and blurs bg when menu is open */
-}
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
 
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: none;
-    z-index: 100;
-    justify-content: center;
-    align-items: center;
-}
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            color: white;
+            width: 90%;
+            max-width: 650px;
+        }
 
-.glass-panel {
-    background: rgba(20, 20, 20, 0.4); /* Dark translucent base */
-    backdrop-filter: blur(20px); /* The Gaussian Blur */
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 3rem;
-    border-radius: 24px;
-    text-align: center;
-    position: relative;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-    color: white;
-    width: 90%;
-    max-width: 650px;
-}
+        .close-x {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            line-height: 1;
+        }
 
-.close-x {
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    font-size: 2.5rem;
-    color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    line-height: 1;
-    transition: color 0.3s;
-}
+        /* --- TRACKER & CONTROLLER --- */
+        .tracker-container {
+            background: radial-gradient(circle at center, #1a0505 0%, #000 100%);
+        }
 
-.close-x:hover { color: #ff4d4d; }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 3rem;
+        }
 
-/* --- 5. BUTTON STYLING --- */
-#home-screen {
-    position: absolute;
-    bottom: 15vh; /* Anchored to bottom left */
-    left: 10vw;
-    z-index: 50;
-}
+        .controller-bg {
+            background: #0f0f0f;
+            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
 
-.btn-pill {
-    background-color: #fff9f2;
-    color: #5a0001;
-    padding: 0.8rem 2.5rem;
-    border-radius: 9999px;
-    font-weight: 800;
-    font-size: 1.25rem;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    display: inline-block;
-}
+        .control-btn {
+            height: 35vh;
+            width: 100%;
+            border-radius: 25px;
+            font-size: 2.5rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 12px 0px 0px rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
 
-.btn-pill:hover {
-    background-color: #5a0001;
-    color: #fff9f2;
-    transform: translateY(-5px) scale(1.05);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-}
+        .control-btn:active {
+            transform: translateY(8px);
+            box-shadow: 0 4px 0px 0px rgba(0,0,0,0.4);
+        }
 
-.btn-pill:active {
-    transform: translateY(0) scale(1);
-}
+        .btn-pill {
+            background-color: #fff9f2;
+            color: #5a0001;
+            padding: 0.8rem 2.5rem;
+            border-radius: 9999px;
+            font-weight: 800;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
 
-/* --- 6. GAME SCREEN UTILITIES --- */
-.stat-card {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2.5rem;
-    text-align: center;
-}
+        .btn-pill:hover {
+            background-color: #5a0001;
+            color: #fff9f2;
+            transform: translateY(-5px);
+        }
 
-/* Tracker Page - Command Center Look */
-.tracker-container {
-    background: radial-gradient(circle at center, #1a0505 0%, #000 100%);
-}
-
-.stat-box {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 30px;
-    padding: 3rem;
-    transition: all 0.5s ease;
-}
-
-.stat-label {
-    letter-spacing: 0.3em;
-    font-weight: 900;
-    text-shadow: 0 0 20px rgba(255,255,255,0.2);
-}
-
-/* Controller - Mobile Console Look */
-.controller-bg {
-    background: #0f0f0f;
-    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), 
-                      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 30px 30px;
-}
-
-.control-btn {
-    height: 35vh;
-    width: 100%;
-    border-radius: 25px;
-    font-size: 3rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    transition: transform 0.1s, filter 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 15px 0px 0px rgba(0,0,0,0.4);
-}
-
-.control-btn:active {
-    transform: translateY(10px);
-    box-shadow: 0 5px 0px 0px rgba(0,0,0,0.4);
-}
-
-</style>
+        #home-screen {
+            position: absolute;
+            bottom: 15vh;
+            left: 10vw;
+            z-index: 50;
+        }
+    </style>
 </head>
 <body>
 
@@ -229,7 +190,7 @@ body, html {
             <h2 class="text-3xl font-bold mb-6 border-b border-white/20 pb-2">Paano Maglaro</h2>
             <div class="text-left space-y-4 text-lg">
                 <p>1. <strong>Koneksyon:</strong> I-scan ang QR code gamit ang dalawang magkaibang phone.</p>
-                <p>2. <strong>Tungkulin:</strong> Isang phone para sa <em>Kamalayan</em> at isa para sa <em>Pang-aapi</em>.</p>
+                <p>2. <strong>Tungkulin:</strong> Kamalayan laban sa Pang-aapi.</p>
                 <p>3. <strong>Layunin:</strong> Pindutin ang DAGDAG o BAWASAN para baguhin ang stats.</p>
             </div>
             <button onclick="closeModals()" class="btn-pill mt-8">Naintindihan!</button>
@@ -239,60 +200,51 @@ body, html {
     <div id="qr-modal" class="modal-overlay">
         <div class="glass-panel">
             <span class="close-x" onclick="closeModals()">&times;</span>
-            <h2 class="text-2xl font-bold mb-8">I-scan ang mga QR Code</h2>
+            <h2 class="text-2xl font-bold mb-8 uppercase tracking-widest">I-konekta ang mga Controller</h2>
             <div class="flex flex-col md:flex-row gap-8 justify-center items-center">
                 <div class="bg-white p-3 rounded-lg"><div id="qr-kamalayan"></div><p class="text-black font-bold mt-2 text-sm uppercase">Kamalayan</p></div>
-                <div class="bg-white p-3 rounded-lg"><div id="qr-pangaapi"></div><p class="text-black font-bold mt-2 text-sm uppercase">Pang-aapi</p></div>
+                <div class="bg-white p-3 rounded-lg"><div id="qr-pang-aapi"></div><p class="text-black font-bold mt-2 text-sm uppercase">Pang-aapi</p></div>
             </div>
-            <button onclick="startGame()" class="btn-pill mt-10" style="background-color: #27ae60; color: white;">START NOW!</button>
+            <button onclick="startGame()" class="btn-pill mt-10" style="background-color: #27ae60; color: white;">SIMULAN NA!</button>
         </div>
     </div>
 
     <div id="game-screen" class="hidden fixed inset-0 tracker-container flex flex-col items-center justify-center z-[150] p-8">
-    <div class="mb-12 text-center">
-        <h1 class="text-white/30 text-xl tracking-[1em] uppercase mb-2">Kamalayan at Pang-aapi ng Bayan</h1>
-        <div class="h-1 w-32 bg-red-800 mx-auto rounded-full"></div>
-    </div>
-
-    <div class="grid grid-cols-2 gap-12 w-full max-w-6xl">
-        <div class="stat-box border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)]">
-            <h3 class="stat-label text-blue-400 text-2xl mb-6">KAMALAYAN</h3>
-            <div id="val-kamalayan" class="text-[12rem] leading-none font-black text-white tabular-nums">0</div>
+        <div class="mb-12 text-center">
+            <h1 class="text-white/30 text-xl tracking-[1em] uppercase mb-2">Live Status Monitor</h1>
+            <div class="h-1 w-32 bg-red-800 mx-auto rounded-full"></div>
         </div>
+        <div class="grid grid-cols-2 gap-12 w-full max-w-6xl">
+            <div class="stat-box border-blue-500/20 text-center">
+                <h3 class="text-blue-400 text-2xl mb-6 tracking-widest">KAMALAYAN</h3>
+                <div id="val-kamalayan" class="text-[12rem] leading-none font-black text-white tabular-nums">0</div>
+            </div>
+            <div class="stat-box border-red-500/20 text-center">
+                <h3 class="text-red-500 text-2xl mb-6 tracking-widest">PANG-AAPI</h3>
+                <div id="val-pang-aapi" class="text-[12rem] leading-none font-black text-white tabular-nums">0</div>
+            </div>
+        </div>
+        <button onclick="calculateResult()" class="mt-16 text-white/40 hover:text-red-500 transition-colors uppercase tracking-[0.5em] text-sm border border-white/10 px-8 py-3 rounded-full">Tapusin ang Laro</button>
+    </div>
 
-        <div class="stat-box border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)]">
-            <h3 class="stat-label text-red-500 text-2xl mb-6">PANG-AAPI</h3>
-            <div id="val-pangaapi" class="text-[12rem] leading-none font-black text-white tabular-nums">0</div>
+    <div id="result-modal" class="modal-overlay">
+        <div class="glass-panel">
+            <p class="text-white/30 text-xs tracking-widest uppercase mb-2">Resulta:</p>
+            <h2 id="result-text" class="text-4xl font-black mb-8 tracking-wide uppercase"></h2>
+            <button onclick="location.reload()" class="btn-pill">Maglaro Muli</button>
         </div>
     </div>
 
-    <button onclick="endGame()" class="mt-16 text-white/40 hover:text-red-500 transition-colors uppercase tracking-[0.5em] text-sm border border-white/10 px-8 py-3 rounded-full">
-        Tapos na!
-    </button>
-</div>
-
-<div id="controller-screen" class="hidden fixed inset-0 controller-bg flex flex-col p-6 z-[200]">
-    <div class="text-center mb-8 pt-4">
-        <p class="text-white/30 text-xs tracking-widest uppercase mb-1">Active Controller</p>
-        <h2 id="controller-title" class="text-2xl font-bold text-white tracking-widest border-b border-white/10 pb-4 inline-block px-8"></h2>
+    <div id="controller-screen" class="hidden fixed inset-0 controller-bg flex flex-col p-6 z-[200]">
+        <div class="text-center mb-8 pt-4">
+            <p class="text-white/30 text-xs tracking-widest uppercase mb-1">Aktibong Controller</p>
+            <h2 id="controller-title" class="text-2xl font-bold text-white tracking-widest border-b border-white/10 pb-4 inline-block px-8 uppercase"></h2>
+        </div>
+        <div class="flex flex-col gap-8 w-full flex-grow justify-center">
+            <button onclick="updateStat(1)" class="control-btn bg-emerald-600 text-white shadow-emerald-900/40">DAGDAG</button>
+            <button onclick="updateStat(-1)" class="control-btn bg-rose-800 text-white shadow-rose-950/40">BAWASAN</button>
+        </div>
     </div>
-
-    <div class="flex flex-col gap-8 w-full flex-grow justify-center">
-        <button onclick="updateStat(1)" 
-                class="control-btn bg-emerald-600 text-white shadow-emerald-900/40">
-            <span>+</span>
-        </button>
-        
-        <button onclick="updateStat(-1)" 
-                class="control-btn bg-rose-800 text-white shadow-rose-950/40">
-            <span>−</span>
-        </button>
-    </div>
-
-    <div class="text-center mt-8 pb-4">
-        <p class="text-white/20 text-[10px] uppercase tracking-tighter">Kanser ng Lipunan v1.0</p>
-    </div>
-</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -333,13 +285,13 @@ body, html {
         function generateQRs() {
             const currentUrl = window.location.href.split('?')[0];
             document.getElementById("qr-kamalayan").innerHTML = "";
-            document.getElementById("qr-pangaapi").innerHTML = "";
+            document.getElementById("qr-pang-aapi").innerHTML = "";
             new QRCode(document.getElementById("qr-kamalayan"), { text: currentUrl + "?role=kamalayan", width: 150, height: 150 });
-            new QRCode(document.getElementById("qr-pangaapi"), { text: currentUrl + "?role=pangaapi", width: 150, height: 150 });
+            new QRCode(document.getElementById("qr-pang-aapi"), { text: currentUrl + "?role=pang-aapi", width: 150, height: 150 });
         }
 
         window.startGame = function() {
-            set(ref(db, 'stats'), { kamalayan: 0, pangaapi: 0 });
+            set(ref(db, 'stats'), { 'kamalayan': 0, 'pang-aapi': 0 });
             closeModals();
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('game-screen').classList.remove('hidden');
@@ -352,17 +304,29 @@ body, html {
 
         onValue(ref(db, 'stats'), (snap) => {
             const data = snap.val();
-            if (data && document.getElementById('val-kamalayan')) {
-                document.getElementById('val-kamalayan').innerText = data.kamalayan;
-                document.getElementById('val-pangaapi').innerText = data.pangaapi;
+            if (data) {
+                if (document.getElementById('val-kamalayan')) document.getElementById('val-kamalayan').innerText = data.kamalayan || 0;
+                if (document.getElementById('val-pang-aapi')) document.getElementById('val-pang-aapi').innerText = data['pang-aapi'] || 0;
             }
         });
 
-        window.endGame = function() {
+        window.calculateResult = function() {
             const k = parseInt(document.getElementById('val-kamalayan').innerText);
-            const p = parseInt(document.getElementById('val-pangaapi').innerText);
-            alert(k > p ? "REPORMISTA WIN!" : p > k ? "KOLONIYALISTA WIN!" : "IT'S A DRAW!");
-            location.reload();
+            const p = parseInt(document.getElementById('val-pang-aapi').innerText);
+            let display = document.getElementById('result-text');
+            
+            if (k > p) {
+                display.innerText = "ANG MGA REPORMISTA AY PANALO";
+                display.style.color = "#60a5fa";
+            } else if (p > k) {
+                display.innerText = "ANG MGA KOLONIYALISTA AY PANALO";
+                display.style.color = "#f87171";
+            } else {
+                display.innerText = "TABLA";
+                display.style.color = "#ffffff";
+            }
+            
+            document.getElementById('result-modal').style.display = 'flex';
         }
     </script>
 </body>
